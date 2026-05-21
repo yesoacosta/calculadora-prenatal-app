@@ -110,11 +110,17 @@ def main(page: ft.Page):
                 riesgo_t21_calculado, riesgo_t18_13_calculado
             )
 
-            # Convertir a base64 y lanzar descarga directa en el dispositivo del usuario
+            # Forzar descarga real en el dispositivo del usuario via JavaScript
             b64 = base64.b64encode(pdf_bytes).decode("utf-8")
             nombre_limpio = nombre.replace(' ', '_')
-            data_url = f"data:application/pdf;base64,{b64}"
-            page.launch_url(data_url, web_popup_window_name=f"Riesgo_Prenatal_{nombre_limpio}.pdf")
+            page.eval_js(f"""
+                var link = document.createElement('a');
+                link.href = 'data:application/pdf;base64,{b64}';
+                link.download = 'Riesgo_Prenatal_{nombre_limpio}.pdf';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            """)
 
             mensaje_estado.value = "¡Éxito! El PDF se está descargando en tu dispositivo."
             mensaje_estado.color = "green"
