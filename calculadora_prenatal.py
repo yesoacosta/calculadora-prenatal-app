@@ -82,7 +82,6 @@ def main(page: ft.Page):
         nombre_limpio = nombre.replace(' ', '_')
         nombre_archivo = f"Riesgo_Prenatal_{nombre_limpio}.pdf"
         
-        # Guardamos el PDF en la carpeta pública "assets"
         ruta_guardado = os.path.join("assets", nombre_archivo)
         pdf.output(ruta_guardado)
         
@@ -110,10 +109,10 @@ def main(page: ft.Page):
                 riesgo_t21_calculado, riesgo_t18_13_calculado
             )
 
-            # Lanza la URL de descarga para el navegador
-            page.launch_url(f"/{archivo_generado}")
+            # Lanza la URL de descarga forzando una pestaña nueva
+            page.launch_url(f"/{archivo_generado}", web_window_name="_blank")
 
-            mensaje_estado.value = "¡Éxito! El documento se ha generado y descargado."
+            mensaje_estado.value = "¡Éxito! El documento se ha generado y abierto en una nueva pestaña."
             mensaje_estado.color = "green"
             page.update()
 
