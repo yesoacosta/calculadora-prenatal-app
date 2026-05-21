@@ -1,0 +1,10 @@
+flet
+    fpdf
+    ```
+  
+
+  
+    1. Ve a "Archivo" > "Guardar como...".
+    2. Navega hasta la carpeta exacta donde tienes tu archivo `calculadora_prenatal.py` y tu carpeta `assets`.
+    3. En el nombre del archivo, escribe exactamente: **`requirements.txt`** (todo en minúsculas).
+    4. Haz clic en Guardar.
