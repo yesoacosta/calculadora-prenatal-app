@@ -110,7 +110,7 @@ def main(page: ft.Page):
             )
 
             # Lanza la URL de descarga forzando una pestaña nueva
-            page.launch_url(f"/{archivo_generado}", web_window_name="_blank")
+            page.launch_url(f"/{archivo_generado}", web_popup_window_name="_blank")
 
             mensaje_estado.value = "¡Éxito! El documento se ha generado y abierto en una nueva pestaña."
             mensaje_estado.color = "green"
