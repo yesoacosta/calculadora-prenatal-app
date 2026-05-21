@@ -84,7 +84,7 @@ def main(page: ft.Page):
         pdf.multi_cell(0, 5, txt=nota_texto)
 
         # Retorna los bytes del PDF en memoria (sin guardar en disco)
-        return bytes(pdf.output())
+        return pdf.output(dest='S').encode('latin-1')
 
     def procesar_datos(e):
         try:
