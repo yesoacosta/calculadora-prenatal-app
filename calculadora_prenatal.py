@@ -31,7 +31,7 @@ def main(page: ft.Page):
         visible=False
     )
 
-    def generar_pdf(nombre, dni, edad, tn, lcn, pappa, hcg, riesgo_t21, riesgo_t18_13):
+    def generar_pdf(nombre, dni, edad, tn, lcn, pappa, hcg, base_t21, final_t21, base_t18_13, final_t18_13):
         pdf = FPDF()
         pdf.add_page()
         
@@ -67,12 +67,27 @@ def main(page: ft.Page):
         pdf.cell(200, 8, txt=f"   - beta-hCG libre: {hcg} MoM", ln=True)
         pdf.ln(5)
         
+        # --- NUEVA SECCIÓN DE RESULTADOS COMPARATIVOS ---
         pdf.set_font("Arial", style="B", size=12)
         pdf.cell(200, 10, txt="3. Índices de Riesgo Calculados:", ln=True)
+        
+        # Subsección Trisomía 21
+        pdf.set_font("Arial", style="U", size=12)
+        pdf.cell(200, 8, txt="   Trisomía 21:", ln=True)
         pdf.set_font("Arial", size=12)
-        pdf.cell(200, 8, txt=f"   - Riesgo Trisomía 21: 1 en {riesgo_t21}", ln=True)
-        pdf.cell(200, 8, txt=f"   - Riesgo Trisomía 18/13: 1 en {riesgo_t18_13}", ln=True)
-        pdf.ln(15)
+        pdf.cell(200, 8, txt=f"     - Riesgo Estimado (solo por edad materna): 1 en {base_t21}", ln=True)
+        pdf.set_font("Arial", style="B", size=12)
+        pdf.cell(200, 8, txt=f"     - Riesgo Ajustado (Cálculo Final): 1 en {final_t21}", ln=True)
+        pdf.ln(2)
+
+        # Subsección Trisomías 18 y 13
+        pdf.set_font("Arial", style="U", size=12)
+        pdf.cell(200, 8, txt="   Trisomía 18/13:", ln=True)
+        pdf.set_font("Arial", size=12)
+        pdf.cell(200, 8, txt=f"     - Riesgo Estimado (solo por edad materna): 1 en {base_t18_13}", ln=True)
+        pdf.set_font("Arial", style="B", size=12)
+        pdf.cell(200, 8, txt=f"     - Riesgo Ajustado (Cálculo Final): 1 en {final_t18_13}", ln=True)
+        pdf.ln(10)
 
         pdf.set_font("Arial", style="I", size=9)
         nota_texto = (
@@ -94,7 +109,6 @@ def main(page: ft.Page):
         return nombre_archivo
 
     def procesar_datos(e):
-        # Ocultar el botón de descarga al iniciar un nuevo cálculo
         boton_descarga.visible = False
         page.update()
 
@@ -110,16 +124,33 @@ def main(page: ft.Page):
             pappa = float(pappa_input.value.replace(',', '.'))
             hcg = float(hcg_input.value.replace(',', '.'))
 
-            factor_riesgo = (edad / 20) * (tn / 1.5) * (hcg / pappa)
-            riesgo_t21_calculado = int(1000 / factor_riesgo) 
-            riesgo_t18_13_calculado = int(2000 / factor_riesgo)
+            # --- NUEVA LÓGICA DE CÁLCULO ---
+            
+            # 1. Riesgo Basal (Curva matemática simulada basada en la edad)
+            # A los 35 años asume un riesgo de 1/250. Empeora exponencialmente a mayor edad.
+            riesgo_base_t21 = int(250 * (0.85 ** (edad - 35)))
+            if riesgo_base_t21 < 10: riesgo_base_t21 = 10 # Límite de seguridad para la simulación
+            riesgo_base_t18_13 = riesgo_base_t21 * 2
 
+            # 2. Factor de Modificación (Ecografía y Laboratorio)
+            # TN alta aumenta el riesgo, PAPP-A baja aumenta el riesgo.
+            factor_modificador = (tn / 1.5) * (hcg / pappa)
+
+            # 3. Riesgo Final Ajustado (Basal / Factor Modificador)
+            riesgo_final_t21 = int(riesgo_base_t21 / factor_modificador)
+            riesgo_final_t18_13 = int(riesgo_base_t18_13 / factor_modificador)
+            
+            # Límites de seguridad visuales para no mostrar valores negativos o cero
+            if riesgo_final_t21 < 2: riesgo_final_t21 = 2
+            if riesgo_final_t18_13 < 2: riesgo_final_t18_13 = 2
+
+            # Generamos el PDF pasando los 4 valores de riesgo
             archivo_generado = generar_pdf(
                 nombre, dni, edad, tn, lcn, pappa, hcg, 
-                riesgo_t21_calculado, riesgo_t18_13_calculado
+                riesgo_base_t21, riesgo_final_t21, 
+                riesgo_base_t18_13, riesgo_final_t18_13
             )
 
-            # Actualizar el estado y mostrar el botón de descarga con la URL correcta
             mensaje_estado.value = "Cálculo finalizado. Haz clic en el botón inferior para abrir el informe."
             mensaje_estado.color = "green"
             boton_descarga.url = f"/{archivo_generado}"
